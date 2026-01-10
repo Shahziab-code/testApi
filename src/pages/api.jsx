@@ -16,6 +16,8 @@ export default function Api() {
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [editable, setEditable] = useState("");
 
   useEffect(() => {
     const savedPosts = JSON.parse(localStorage.getItem("posts") || "[]");
@@ -42,16 +44,58 @@ export default function Api() {
     }
   }, []);
 
+  useEffect(() => {
+    if (isInitialized) {
+      localStorage.setItem("posts", JSON.stringify(posts));
+    }
+  }, [posts, isInitialized]);
+
   if (isLoading) {
     return <div className="loading">Loading...</div>;
   }
 
-  const handleEdit = (label) => {
-    alert(`Edit clicked for ${label}`);
+  const handleEdit = async (id) => {
+    try {
+      const res = await fetch(`${BASE_URL}/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: editable }),
+      });
+      const updatedPost = await res.json();
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === id ? { ...post, title: updatedPost.title } : post
+        )
+      );
+      setEditId(null);
+    } catch (error) {
+      console.error("Error updating post:", error);
+    }
   };
 
-  const handleDelete = (label) => {
-    
+  const confirmAndSave = async (id) => {
+    const isConfirmed = window.confirm("Are you sure you want to update this item?");
+    if (!isConfirmed) return;
+    await handleEdit(id); 
+  }
+
+  const startEdit = (post) => {
+    setEditId(post.id);
+    setEditable(post.title);
+  };
+
+  const handleDelete = async (id) => {
+    const isConfirmed = window.confirm("are you sure you want to delete this item?");
+    if (!isConfirmed) return;
+    try {
+      await fetch(`${BASE_URL}/${id}`, {
+        method: "DELETE",
+      });
+    } catch (error) {
+      console.error("Error deleting post:", error);
+    } finally {
+      setPosts((prevPosts) => prevPosts.filter((post) => post.id !== id));
+    }
   };
 
   return (
@@ -61,24 +105,44 @@ export default function Api() {
       </header>
 
       <ul className="items">
-        {posts && posts.length > 0 ? (
-          posts.map((post, index) => (
+        {posts.map((post, index) => {
+          return (
             <li className="item" key={post.id}>
-              <span className="label">#{index + 1}</span>
-              <span className="value">{post.title}</span>
-              <div className="actions">
-                <button className="edit" onClick={() => handleEdit(post)}>
-                  <FontAwesomeIcon icon={faPenSquare} /> <span>Edit</span>
-                </button>
-                <button className="delete" onClick={() => handleDelete(post)}>
-                  <FontAwesomeIcon icon={faTrash} /> <span>Delete</span>
-                </button>
-              </div>
+              {editId === post.id ? (
+                <>
+                  <input
+                    type="text"
+                    className="inputText"
+                    value={editable}
+                    onChange={(e) => setEditable(e.target.value)}
+                    // onBlur={() => handleEdit(post.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleEdit(post.id);
+                    }}
+                    autoFocus
+                  />
+                  <button className="save-btn" onClick={() => handleEdit(post.id)}>save</button>
+                </>
+              ) : (
+                <>
+                  <span className="label">#{index + 1}</span>
+                  <span className="value">{post.title}</span>
+                  <div className="actions">
+                    <button className="edit" onClick={() => startEdit(post)}>
+                      <FontAwesomeIcon icon={faPenSquare} /> <span>Edit</span>
+                    </button>
+                    <button
+                      className="delete"
+                      onClick={() => handleDelete(post.id)}
+                    >
+                      <FontAwesomeIcon icon={faTrash} /> <span>Delete</span>
+                    </button>
+                  </div>
+                </>
+              )}
             </li>
-          ))
-        ) : (
-          <li className="item empty">No items found</li>
-        )}
+          );
+        })}
       </ul>
 
       <p className="note">

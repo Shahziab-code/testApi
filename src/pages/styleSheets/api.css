@@ -106,3 +106,46 @@
   .item{flex-direction:column; align-items:flex-start}
   .actions{width:100%; justify-content:flex-end}
 }
+
+.inputText {
+  background: rgba(255,255,255,0.02);
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,0.04);
+  padding: 8px 10px;
+  border-radius: 8px;
+  min-width: 600px;
+  max-width: 100%;
+  outline: none;
+  transition: box-shadow .15s ease, border-color .15s ease;
+}
+
+.inputText::placeholder {
+  color: var(--muted);
+  opacity: 0.9;
+}
+
+.inputText:focus {
+  border-color: rgba(31,142,241,0.28);
+  box-shadow: 0 4px 14px rgba(31,142,241,0.08);
+}
+
+/* Save button (small accent button) */
+.save-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.save-btn:hover {
+  opacity: 0.95;
+}
+
+/* Mobile tweaks */
+@media (max-width:600px){
+  .item input.inputText { width: 100%; margin-bottom: 8px; }
+  .item .save-btn { width: 100%; }
+}
