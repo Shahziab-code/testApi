@@ -51,7 +51,7 @@ export default function Api() {
   };
 
   const handleDelete = (label) => {
-    alert(`Delete clicked for ${label}`);
+    
   };
 
   return (
